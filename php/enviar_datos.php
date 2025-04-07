@@ -12,18 +12,21 @@ use PHPMailer\PHPMailer\Exception;
 
 // Solo permitir método POST
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    // Validar y sanitizar inputs
-    $names = htmlspecialchars($_POST["names"] ?? '');
-    $email = htmlspecialchars($_POST["email"] ?? '');
-    $phone = htmlspecialchars($_POST["phone"] ?? '');
-    $message = htmlspecialchars($_POST["message"] ?? '');
+    // Obtener los datos JSON de la solicitud
+    $data = json_decode(file_get_contents("php://input"), true);
 
-    // Validación de campos
-    if (!$names || !$email || !$phone || !$message) {
+    // Validar que los datos hayan llegado correctamente
+    if (!$data || !isset($data["names"]) || !isset($data["email"]) || !isset($data["phone"]) || !isset($data["message"])) {
         http_response_code(400);
         echo json_encode(["error" => "Todos los campos son obligatorios."]);
         exit;
     }
+
+    // Sanitizar y asignar variables
+    $names = htmlspecialchars($data["names"]);
+    $email = htmlspecialchars($data["email"]);
+    $phone = htmlspecialchars($data["phone"]);
+    $message = htmlspecialchars($data["message"]);
 
     // Validación de email
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
