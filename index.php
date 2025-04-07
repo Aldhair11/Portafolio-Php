@@ -5,7 +5,7 @@ header("Access-Control-Allow-Headers: Content-Type");
 
 require './php/enviar_datos.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     $data = json_decode(file_get_contents("php://input"), true);
 
     if (!$data) {
