@@ -1,71 +1,70 @@
 <?php
+// Habilitar CORS por si el frontend está en otro origen (Astro u otro)
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: POST");
+header("Access-Control-Allow-Headers: Content-Type");
+
+// Cargar PHPMailer
 require __DIR__ . '/vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $names = htmlspecialchars($_POST["name"]);
-    $email = htmlspecialchars($_POST["email"]);
-    $phone = htmlspecialchars($_POST["phone"]);
-    $message = htmlspecialchars($_POST["message"]);
-    $messageStatus = "El mensaje se envió correctamente.";
+// Solo permitir método POST
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    // Validar y sanitizar inputs
+    $names = htmlspecialchars($_POST["names"] ?? '');
+    $email = htmlspecialchars($_POST["email"] ?? '');
+    $phone = htmlspecialchars($_POST["phone"] ?? '');
+    $message = htmlspecialchars($_POST["message"] ?? '');
 
-    if (!empty($names) && !empty($email) && !empty($phone) && !empty($message)) {
-        // Validación del correo electrónico
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            echo "<script>alert('Correo electrónico inválido.'); window.history.back();</script>";
-            exit;
-        }
+    // Validación de campos
+    if (!$names || !$email || !$phone || !$message) {
+        http_response_code(400);
+        echo json_encode(["error" => "Todos los campos son obligatorios."]);
+        exit;
+    }
 
-        try {
-            ([
-                "name" => $names,
-                "email" => $email,
-                "phone" => $phone,
-                "message" => $message,
-                
-            ]);
+    // Validación de email
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        http_response_code(400);
+        echo json_encode(["error" => "Correo electrónico inválido."]);
+        exit;
+    }
 
-            if ($names && $email && $phone && $message) {
-                $mail = new PHPMailer(true);
-                try {
-                    $mail->isSMTP();
-                    $mail->Host = getenv('EMAIL_HOST') ?: $_ENV['EMAIL_HOST'] ?? null;
-                    $mail->SMTPAuth = true;
-                    $mail->Username = getenv('EMAIL_USER') ?: $_ENV['EMAIL_USER'] ?? null;
-                    $mail->Password = getenv('EMAIL_PASS') ?: $_ENV['EMAIL_PASS'] ?? null;
-                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                    $mail->Port = 587;
+    try {
+        $mail = new PHPMailer(true);
 
-                    $mail->setFrom('aldhajo.1101@gmail.com', 'Nombre Remitente'); 
-                    $mail->addAddress('aldha.110102@gmail.com', 'Destinatario'); 
-                    $mail->addReplyTo($email, $names);
+        // Configuración SMTP
+        $mail->isSMTP();
+        $mail->Host = getenv('EMAIL_HOST') ?: $_ENV['EMAIL_HOST'] ?? null; 
+        $mail->SMTPAuth = true;
+        $mail->Username = getenv('EMAIL_USER') ?: $_ENV['EMAIL_USER'] ?? null; 
+        $mail->Password = getenv('EMAIL_PASS') ?: $_ENV['EMAIL_PASS'] ?? null;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
 
-                    $mail->isHTML(true);
-                    $mail->Subject = 'Nuevo mensaje de contacto de Portafolio Web';
-                    $mail->Body = "<h2>Nuevo mensaje de contacto web</h2>"
-                                  ."<p><strong>Nombre:</strong> $name</p>"
-                                  ."<p><strong>Correo:</strong> $email</p>"
-                                  ."<p><strong>Teléfono:</strong> $phone</p>"
-                                  ."<p><strong>Mensaje:</strong> $message</p>";
+        // Configuración del correo
+        $mail->setFrom('aldhajo.1101@gmail.com', 'Formulario Web'); 
+        $mail->addAddress('aldha.110102@gmail.com', 'Destinatario');
+        $mail->addReplyTo($email, $names);
 
-                    $mail->send();
-                    echo "<script>alert('El mensaje se envió correctamente.'); window.location.href = '../index.html';</script>";
-                } catch (Exception $e) {
-                    echo "<script>alert('Error al enviar el correo: {$mail->ErrorInfo}'); window.history.back();</script>";
-                }
-            } else {
-                echo "<script>alert('Error al guardar en la base de datos.'); window.history.back();</script>";
-            }
-        } catch (Exception $e) {
-            echo "<script>alert('Error al guardar en la base de datos: {$e->getMessage()}'); window.history.back();</script>";
-        }
-    } else {
-        echo "<script>alert('Por favor, completa todos los campos.'); window.history.back();</script>";
+        $mail->isHTML(true);
+        $mail->Subject = 'Nuevo mensaje de contacto de Portafolio Web';
+        $mail->Body = "<h2>Nuevo mensaje recibido</h2>
+                       <p><strong>Nombre:</strong> $names</p>
+                       <p><strong>Correo:</strong> $email</p>
+                       <p><strong>Teléfono:</strong> $phone</p>
+                       <p><strong>Mensaje:</strong> $message</p>";
+
+        $mail->send();
+        echo json_encode(["success" => "Mensaje enviado correctamente."]);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Error al enviar correo: {$mail->ErrorInfo}"]);
     }
 } else {
-    echo "Acceso no permitido.";
-}   
-
+    http_response_code(405);
+    echo json_encode(["error" => "Método no permitido."]);
+}
 ?>
