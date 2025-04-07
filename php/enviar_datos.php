@@ -5,7 +5,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $names = htmlspecialchars($_POST["names"]);
+    $names = htmlspecialchars($_POST["name"]);
     $email = htmlspecialchars($_POST["email"]);
     $phone = htmlspecialchars($_POST["phone"]);
     $message = htmlspecialchars($_POST["message"]);
@@ -20,7 +20,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         try {
             ([
-                "names" => $names,
+                "name" => $names,
                 "email" => $email,
                 "phone" => $phone,
                 "message" => $message,
@@ -45,7 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $mail->isHTML(true);
                     $mail->Subject = 'Nuevo mensaje de contacto de Portafolio Web';
                     $mail->Body = "<h2>Nuevo mensaje de contacto web</h2>"
-                                  ."<p><strong>Nombre:</strong> $names</p>"
+                                  ."<p><strong>Nombre:</strong> $name</p>"
                                   ."<p><strong>Correo:</strong> $email</p>"
                                   ."<p><strong>Teléfono:</strong> $phone</p>"
                                   ."<p><strong>Mensaje:</strong> $message</p>";
