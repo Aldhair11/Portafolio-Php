@@ -21,6 +21,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         echo json_encode(["error" => "Todos los campos son obligatorios."]);
         exit;
     }
+    if (!is_numeric($phone)) {
+        http_response_code(400);
+        echo json_encode(["error" => "El teléfono debe ser numérico."]);
+        exit;
+    }
 
     // Sanitizar y asignar variables
     $names = htmlspecialchars($data["names"]);
